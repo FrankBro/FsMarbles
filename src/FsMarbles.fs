@@ -15,6 +15,9 @@ module ExtraProps =
     let Transform (value: string) = !!("transform", value :> obj)
     let Width (value: string) = !!("width", value :> obj)
     let Height (value: string) = !!("height", value :> obj)
+    let FontWeight (value: string) = !!("fontWeight", value :> obj)
+    let FontFamily (value: string) = !!("fontFamily", value :> obj)
+    let FontSize (value: string) = !!("fontSize", value :> obj)
 
 type Position = {
     X: int
@@ -43,6 +46,13 @@ type Point<'typ> = {
     Shape: Shape
 }
 
+type FnSignature =
+    | FnSig of FnSignature list
+    | Collection of Shape
+    | Single of Shape
+    | Specific of string
+    | Arrow
+
 type Box =
     | IntCollection of Point<int> list
     | IntSingle of Point<int>
@@ -57,6 +67,7 @@ type Box =
     | BoolSingle of Point<bool>
     | BoolOption of Point<bool> option
     | Fn of string
+    | FnSignature of FnSignature list
     | Crash
 
 type Page =
@@ -196,7 +207,7 @@ with
         let mathInputsF = mathInputs |> List.map (fun input -> { Position = input.Position; Color = input.Color; Value = float input.Value; Shape = input.Shape })
         match x with
         | Append ->
-            let fnName = "append"
+            let fnName = "List.append"
             let inputs1 =
                 [
                     circleB 00 1
@@ -223,6 +234,7 @@ with
                 IntCollection inputs1
                 IntCollection inputs2
                 Fn fnName
+                FnSignature [Collection Circle; Arrow; Collection Circle; Arrow; Collection Circle]
                 IntCollection outputs
             ]
         | Average ->
@@ -721,8 +733,8 @@ with
             ]
         | Map ->
             let fnName, fn =
-                "(fun x -> float (x * 10))" |> (+) "List.map "
-                ,(fun x -> float (x * 10))
+                "(fun x -> x * 10)" |> (+) "List.map "
+                ,(fun x -> x * 10)
             let inputs =
                 [
                     circleY 10 1
@@ -738,7 +750,8 @@ with
             [
                 IntCollection inputs
                 Fn fnName
-                FloatCollection outputs
+                FnSignature [FnSig [ Single Circle; Arrow; Single Square ]; Arrow; Collection Circle; Arrow; Collection Square]
+                IntCollection outputs
             ]
         | Map2 ->
             let fnName, fn =
@@ -1087,11 +1100,17 @@ let squareSvg position color value =
         text [TextAnchor "middle"; Y "0.8"; Style [FontSize "2.5px"; FontFamily "\"Source Sans Pro\", sans-serif"]] [str (string value)]
     ]
 
+let arrowSvg x =
+    let transform = sprintf "translate(%d, %d)" x 0
+    g [ClassName "marble"; ExtraProps.Transform transform; Style [Cursor "default"]] [
+        line [X1 0; X2 4; Y1 "5"; Y2 "5"; Stroke "black"; Style [StrokeWidth 0.3]] []
+        polygon [Points "3.7,6.1 3.7,3.9 6,5"] []
+    ]
+
 let shapeSvg point =
     match point.Shape with
     | Circle -> circleSvg point.Position point.Color point.Value
     | Square -> squareSvg point.Position point.Color point.Value
-
 
 let shapesSvg points =
     points
@@ -1111,6 +1130,70 @@ let fnBox fnName =
         span [ClassName "operatorLabel"; Style [FontWeight "400"; FontSize "2rem"; FontFamily "\"Source Code Pro\", monospace"]] [str fnName]
         div [Style [Display "block"; Position "absolute"; Left "0px"; Top "0px"; Right "0px"; Bottom "0px"; BoxShadow "rgba(0, 0, 0, 0.26) 0px 2px 5px 0px"]] []
     ]
+
+let fnSignatureBox signatures =
+    let size =
+        let rec loop x = function
+            | [] -> x
+            | signature :: signatures ->
+                match signature with
+                | FnSignature.FnSig xs ->
+                    let endX = loop (x + 6) xs
+                    loop (endX + 4) signatures
+                | FnSignature.Collection s -> 
+                    let endX = (x + 15)
+                    loop endX signatures
+                | FnSignature.Single s -> 
+                    loop (x + 4) signatures
+                | FnSignature.Specific tName -> 
+                    loop x signatures
+                | FnSignature.Arrow -> 
+                    loop (x + 10) signatures
+        loop 0 signatures
+    let startX = (105 - size) / 2
+    let middleContent =
+        let rec loop (x, state) = function
+            | [] -> (x, state)
+            | signature :: signatures ->
+                match signature with
+                | FnSignature.FnSig xs ->
+                    let paren1 = text [X x; Y 6.5; ExtraProps.FontWeight "200"; ExtraProps.FontSize "0.25rem"; ExtraProps.FontFamily "\"Source Code Pro\", monospace"] [str "("]
+                    let endX, innerState = loop ((x + 6), []) xs
+                    let paren2 = text [X endX; Y 6.5; ExtraProps.FontWeight "200"; ExtraProps.FontSize "0.25rem"; ExtraProps.FontFamily "\"Source Code Pro\", monospace"] [str ")"]
+                    let state = (endX + 4), [ yield paren1; yield! innerState; yield paren2 ]
+                    loop state signatures
+                | FnSignature.Collection s ->
+                    let shape =
+                        match s with
+                        | Circle -> circleSvg { X = x; Y = 5 } Color.Red ""
+                        | Square -> squareSvg { X = x; Y = 5 } Color.Red ""
+                    let list = text [X (x + 4); Y 6.5; ExtraProps.FontWeight "200"; ExtraProps.FontSize "0.25rem"; ExtraProps.FontFamily "\"Source Code Pro\", monospace"] [str "list"]
+                    let state = (x + 15), shape :: list :: state
+                    loop state signatures
+                | FnSignature.Single s -> 
+                    let shape =
+                        match s with
+                        | Circle -> circleSvg { X = x; Y = 5 } Color.Red ""
+                        | Square -> squareSvg { X = x; Y = 5 } Color.Red ""
+                    let state = (x + 4), shape :: state
+                    loop state signatures
+                | FnSignature.Specific tName -> x, state
+                | FnSignature.Arrow ->
+                    let arrow = arrowSvg x
+                    let state = (x + 10), arrow :: state
+                    loop state signatures
+        loop (startX, []) signatures
+    let middle =
+        middleContent
+        |> snd
+        |> (svg [ViewBox "0 0 100 10"; Style [Width "680px"; Height "68px"; Overflow "visible"]])
+    [
+
+        div [Style [Display "block"; Position "absolute"; Left "0px"; Top "0px"; Right "0px"; Bottom "0px"; BoxShadow "rgba(0, 0, 0, 0.17) 0px 2px 10px 0px"]] []
+        middle
+        div [Style [Display "block"; Position "absolute"; Left "0px"; Top "0px"; Right "0px"; Bottom "0px"; BoxShadow "rgba(0, 0, 0, 0.26) 0px 2px 5px 0px"]] []
+    ]
+    |> (div [ClassName "operatorBox"; Style [Border "1px solid rgba(0, 0, 0, 0.06)"; Padding "22px"; TextAlign "center"; Position "relative"]])
 
 let body (page: Page) =
     let content = 
@@ -1134,6 +1217,7 @@ let body (page: Page) =
             | BoolSingle point -> point |> boolFn |> List.singleton |> listBox
             | BoolOption oPoint -> failwith "Not implemented"
             | Fn fnName -> fnBox fnName
+            | FnSignature signature -> fnSignatureBox signature
             | Crash -> fnBox "EXCEPTION"
         )
     div [Style [Flex "0 0 820px"]] [
