@@ -5,8 +5,6 @@ open Fable.Core
 open Fable.Core.JsInterop
 open Fable.Import
 
-//importAll "../sass/main.sass"
-
 module List =
     let cons x xs = x :: xs
 
@@ -1146,7 +1144,7 @@ let body (page: Page) =
 let view (model: Model) (dispatch: Dispatch<Action>) : Fable.Import.React.ReactElement =
     div [ClassName "app-container"] [
         div [Style [Width "1060px"; Margin "0px auto"]] [
-            a [ClassName "github-fork-ribbon"; Href "https://github.com/staltz/rxmarbles"; Title "Fork me on GitHub"] [str "Fork me on GitHub"]
+            a [ClassName "github-fork-ribbon"; Href "https://github.com/FrankBro/FsMarbles"; Title "Fork me on GitHub"] [str "Fork me on GitHub"]
             div [Style [Display "flex"; AlignItems "baseline"]] [
                 h1 [Style [FontFamily "Signika, Helvetica, serif"; Color "rgb(124, 124, 124)"; Flex "1 1 0%"]] [
                     str "Fs Marbles"
