@@ -1160,6 +1160,8 @@ let view (model: Model) (dispatch: Dispatch<Action>) : Fable.Import.React.ReactE
             section [Style [Position "fixed"; Bottom "2px"; Right "22px"; Color "rgb(124, 124, 124)"]] [
                 str "Built on "
                 a [Href "http://fable.io"] [str "Fable"]
+                str ", inpired by "
+                a [Href "http://rxmarbles.com/"] [str "RxMarbles"]
             ]
         ]
     ]
