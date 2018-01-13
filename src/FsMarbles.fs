@@ -928,7 +928,7 @@ with
         | Sum ->
             let fnName = "List.sum"
             let inputs = mathInputs
-            let outputValue = inputs |> List.map (fun point -> point.Value) |> List.min
+            let outputValue = inputs |> List.map (fun point -> point.Value) |> List.sum
             let output =
                 inputs
                 |> List.tryLast
