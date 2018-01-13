@@ -269,8 +269,8 @@ with
             ]
         | Choose ->
             let fnName, fn =
-                "(fun x -> if x > 10 then (Some float) x else None)" |> (+) "List.choose "
-                ,(fun x -> if x > 10 then Some (float x) else None)
+                "(fun x -> if x % 2 = 0 then Some (float (x / 2)) else None)" |> (+) "List.choose "
+                ,(fun x -> if x % 2 = 0 then Some (float (x / 2)) else None)
             let inputs =
                 [
                     circleY 05 02
