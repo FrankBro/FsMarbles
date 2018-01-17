@@ -48,9 +48,10 @@ type Point<'typ> = {
 
 type FnSignature =
     | FnSig of FnSignature list
-    | Collection of Shape
-    | Single of Shape
+    | Collection of Shape * string
+    | Single of Shape * string
     | Specific of string
+    | FnOption of Shape * string
     | Arrow
 
 type Box =
@@ -234,7 +235,7 @@ with
                 IntCollection inputs1
                 IntCollection inputs2
                 Fn fnName
-                FnSignature [Collection Circle; Arrow; Collection Circle; Arrow; Collection Circle]
+                FnSignature [Collection (Circle, "'T"); Arrow; Collection (Circle, "'T"); Arrow; Collection (Circle, "'T")]
                 IntCollection outputs
             ]
         | Average ->
@@ -249,6 +250,7 @@ with
             [
                 FloatCollection inputs
                 Fn fnName
+                FnSignature [Collection (Circle, "'T"); Arrow; Single (Circle, "^T")]
                 FloatSingle output
             ]
         | AverageBy ->
@@ -265,12 +267,13 @@ with
             [
                 IntCollection mathInputs
                 Fn fnName
+                FnSignature [FnSig [Single (Circle, "'T"); Arrow; Single (Square, "^U")]; Arrow; Collection (Circle, "'T"); Arrow; Single (Square, "^U")]
                 FloatSingle output
             ]
         | Choose ->
             let fnName, fn =
-                "(fun x -> if x > 10 then (Some float) x else None)" |> (+) "List.choose "
-                ,(fun x -> if x > 10 then Some (float x) else None)
+                "(fun x -> if x > 10 then Some (x + 1) else None)" |> (+) "List.choose "
+                ,(fun x -> if x > 10 then Some (x + 1) else None)
             let inputs =
                 [
                     circleY 05 02
@@ -291,12 +294,13 @@ with
             [
                 IntCollection inputs
                 Fn fnName
-                FloatCollection outputs
+                FnSignature [FnSig [ Single (Circle, "'T"); Arrow; FnOption (Square, "'U") ]; Arrow; Collection (Circle, "'T"); Arrow; Collection (Square, "'U")]
+                IntCollection outputs
             ]
         | Collect ->
             let fnName, fn =
-                "(fun x -> [float x; float (x + 1)]" |> (+) "List.collect "
-                ,(fun x -> [float x; float (x + 1)])
+                "(fun x -> [x; x + 1])" |> (+) "List.collect "
+                ,(fun x -> [x; x + 1])
             let inputs =
                 [
                     circleY 05 10
@@ -315,7 +319,8 @@ with
             [
                 IntCollection inputs
                 Fn fnName
-                FloatCollection outputs
+                FnSignature [FnSig [ Single (Circle, "'T"); Arrow; Collection (Square, "'U") ]; Arrow; Collection (Circle, "'T"); Arrow; Collection (Square, "'U")]
+                IntCollection outputs
             ]
         // | ChunkBySize ->
         //     let fnName, fn = 
@@ -750,13 +755,13 @@ with
             [
                 IntCollection inputs
                 Fn fnName
-                FnSignature [FnSig [ Single Circle; Arrow; Single Square ]; Arrow; Collection Circle; Arrow; Collection Square]
+                FnSignature [FnSig [ Single (Circle, "'T"); Arrow; Single (Square, "'U") ]; Arrow; Collection (Circle, "'T"); Arrow; Collection (Square, "'U")]
                 IntCollection outputs
             ]
         | Map2 ->
             let fnName, fn =
-                "(fun x y -> float (x + y))" |> (+) "List.map2 "
-                ,(fun x y -> float (x + y))
+                "(fun x y -> x + y)" |> (+) "List.map2 "
+                ,(fun x y -> x + y)
             let inputs1 =
                 [
                     circleY 10 1
@@ -779,12 +784,12 @@ with
                 IntCollection inputs1
                 IntCollection inputs2
                 Fn fnName
-                FloatCollection outputs
+                IntCollection outputs
             ]
         | Map3 ->
             let fnName, fn =
-                "(fun x y z -> float (x + y + z))" |> (+) "List.map3 "
-                ,(fun x y z -> float (x + y + z))
+                "(fun x y z -> x + y + z)" |> (+) "List.map3 "
+                ,(fun x y z -> x + y + z)
             let inputs1 =
                 [
                     circleY 10 1
@@ -814,12 +819,12 @@ with
                 IntCollection inputs2
                 IntCollection inputs3
                 Fn fnName
-                FloatCollection outputs
+                IntCollection outputs
             ]
         | Mapi ->
             let fnName, fn =
-                "(fun i x -> float (x * i))" |> (+) "List.mapi "
-                ,(fun i x -> float (x * i))
+                "(fun i x -> x * i)" |> (+) "List.mapi "
+                ,(fun i x -> x * i)
             let inputs =
                 [
                     circleY 10 1
@@ -835,12 +840,12 @@ with
             [
                 IntCollection inputs
                 Fn fnName
-                FloatCollection outputs
+                IntCollection outputs
             ]
         | Mapi2 ->
             let fnName, fn =
-                "(fun i x y -> float ((x + y) * i))" |> (+) "List.mapi2 "
-                ,(fun i x y -> float ((x + y) * i))
+                "(fun i x y -> (x + y) * i)" |> (+) "List.mapi2 "
+                ,(fun i x y -> (x + y) * i)
             let inputs1 =
                 [
                     circleY 10 1
@@ -863,7 +868,7 @@ with
                 IntCollection inputs1
                 IntCollection inputs2
                 Fn fnName
-                FloatCollection outputs
+                IntCollection outputs
             ]
         | Max ->
             let fnName = "List.max"
@@ -881,8 +886,8 @@ with
             ]
         | MaxBy ->
             let fnName, fn = 
-                "(fun x -> float x)" |> (+) "List.maxBy "
-                ,(fun x -> float x)
+                "(fun x -> x)" |> (+) "List.maxBy "
+                ,(fun x -> x)
             let inputs = mathInputs
             let outputValue = inputs |> List.map (fun point -> point.Value) |> List.maxBy fn
             let output =
@@ -911,8 +916,8 @@ with
             ]
         | MinBy ->
             let fnName, fn = 
-                "(fun x -> float x)" |> (+) "List.minBy "
-                ,(fun x -> float x)
+                "(fun x -> x)" |> (+) "List.minBy "
+                ,(fun x -> x)
             let inputs = mathInputs
             let outputValue = inputs |> List.map (fun point -> point.Value) |> List.minBy fn
             let output =
@@ -941,8 +946,8 @@ with
             ]
         | SumBy ->
             let fnName, fn = 
-                "(fun x -> float x)" |> (+) "List.sumBy "
-                ,(fun x -> float x)
+                "(fun x -> x)" |> (+) "List.sumBy "
+                ,(fun x -> x)
             let inputs = mathInputs
             let outputValue = inputs |> List.map (fun point -> point.Value) |> List.sumBy fn
             let output =
@@ -953,7 +958,7 @@ with
             [
                 IntCollection mathInputs
                 Fn fnName
-                FloatSingle output
+                IntSingle output
             ]
 
 
@@ -1140,10 +1145,13 @@ let fnSignatureBox signatures =
                 | FnSignature.FnSig xs ->
                     let endX = loop (x + 6) xs
                     loop (endX + 4) signatures
-                | FnSignature.Collection s -> 
+                | FnSignature.Collection _ -> 
                     let endX = (x + 15)
                     loop endX signatures
-                | FnSignature.Single s -> 
+                | FnSignature.FnOption _ -> 
+                    let endX = (x + 18)
+                    loop endX signatures
+                | FnSignature.Single _ -> 
                     loop (x + 4) signatures
                 | FnSignature.Specific tName -> 
                     loop x signatures
@@ -1162,19 +1170,27 @@ let fnSignatureBox signatures =
                     let paren2 = text [X endX; Y 6.5; ExtraProps.FontWeight "200"; ExtraProps.FontSize "0.25rem"; ExtraProps.FontFamily "\"Source Code Pro\", monospace"] [str ")"]
                     let state = (endX + 4), [ yield paren1; yield! innerState; yield paren2 ]
                     loop state signatures
-                | FnSignature.Collection s ->
+                | FnSignature.Collection (s, typ) ->
                     let shape =
                         match s with
-                        | Circle -> circleSvg { X = x; Y = 5 } Color.Red ""
-                        | Square -> squareSvg { X = x; Y = 5 } Color.Red ""
+                        | Circle -> circleSvg { X = x; Y = 5 } Color.Red typ
+                        | Square -> squareSvg { X = x; Y = 5 } Color.Red typ
                     let list = text [X (x + 4); Y 6.5; ExtraProps.FontWeight "200"; ExtraProps.FontSize "0.25rem"; ExtraProps.FontFamily "\"Source Code Pro\", monospace"] [str "list"]
                     let state = (x + 15), shape :: list :: state
                     loop state signatures
-                | FnSignature.Single s -> 
+                | FnSignature.FnOption (s, typ) ->
                     let shape =
                         match s with
-                        | Circle -> circleSvg { X = x; Y = 5 } Color.Red ""
-                        | Square -> squareSvg { X = x; Y = 5 } Color.Red ""
+                        | Circle -> circleSvg { X = x; Y = 5 } Color.Red typ
+                        | Square -> squareSvg { X = x; Y = 5 } Color.Red typ
+                    let list = text [X (x + 4); Y 6.5; ExtraProps.FontWeight "200"; ExtraProps.FontSize "0.25rem"; ExtraProps.FontFamily "\"Source Code Pro\", monospace"] [str "option"]
+                    let state = (x + 18), shape :: list :: state
+                    loop state signatures
+                | FnSignature.Single (s, typ) -> 
+                    let shape =
+                        match s with
+                        | Circle -> circleSvg { X = x; Y = 5 } Color.Red typ
+                        | Square -> squareSvg { X = x; Y = 5 } Color.Red typ
                     let state = (x + 4), shape :: state
                     loop state signatures
                 | FnSignature.Specific tName -> x, state
