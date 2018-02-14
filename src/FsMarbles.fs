@@ -436,6 +436,7 @@ with
             [
                 IntCollection inputs
                 Fn fnName
+                FnSignature [Single (Circle, "'T"); Arrow; Collection (Square, "'T") ; Arrow; Specific "bool"]
                 BoolSingle output
             ]
         | CountBy ->
@@ -467,6 +468,7 @@ with
             [
                 IntCollection inputs
                 Fn fnName
+                //FnSignature [FnSig [Single (Circle, "'T"); Arrow; Single (Square, "'Key")]; Arrow; Collection (Circle, "'T"); ]
                 StringCollection outputs
             ]
         | Distinct ->
@@ -495,6 +497,7 @@ with
             [
                 IntCollection inputs
                 Fn fnName
+                FnSignature [Collection (Circle, "'T"); Arrow; Collection (Circle, "'T")]
                 IntCollection outputs
             ]
         | Empty ->
@@ -502,6 +505,7 @@ with
             let outputs = []
             [
                 Fn fnName
+                FnSignature [Collection (Circle, "'T")]
                 IntCollection outputs
             ]
         | Exists ->
@@ -532,6 +536,7 @@ with
             [
                 IntCollection inputs
                 Fn fnName
+                FnSignature [FnSig [Single (Circle, "'T"); Arrow; Specific "bool"]; Arrow; Collection (Circle, "'T"); Arrow; Specific "bool"]
                 BoolSingle output
             ]
         | Exists2 ->
@@ -573,6 +578,7 @@ with
                 IntCollection inputs1
                 IntCollection inputs2
                 Fn fnName
+                FnSignature [FnSig [Single (Circle, "'T1"); Arrow; Single (Square, "'T2"); Arrow; Specific "bool"]; Arrow; Collection (Circle, "'T1"); Arrow; Collection (Square, "'T2"); Arrow; Specific "bool"]
                 BoolSingle output
             ]
         | Filter ->
@@ -1154,6 +1160,7 @@ let fnSignatureBox signatures =
                 | FnSignature.Single _ -> 
                     loop (x + 4) signatures
                 | FnSignature.Specific tName -> 
+                    skjdksjsdk    
                     loop x signatures
                 | FnSignature.Arrow -> 
                     loop (x + 10) signatures
